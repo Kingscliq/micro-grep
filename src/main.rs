@@ -1,10 +1,11 @@
 use std::{env, error::Error, fs, process};
 
-use microgrep::search;
+use microgrep::{case_insensitive_search, search};
 
 struct Config {
     query: String,
     file_path: String,
+    ignore_case: bool,
 }
 
 impl Config {
@@ -14,32 +15,18 @@ impl Config {
         }
         let query = args[1].clone();
         let file_path = args[2].clone();
-        Ok(Self { query, file_path })
+        let ignore_case = env::var("IGNORE_CASE").is_ok();
+
+        Ok(Self {
+            query,
+            file_path,
+            ignore_case,
+        })
     }
 }
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    // let query = &args[1];
-    // let file_path = &args[2];
-
-    // let input = parse_string(&args);
-
-    // let query = config.query;
-    // let file_path = config.file_path;
-    // println!("Searching for {query}");
-    // println!("In file {file_path}");
-
-    // let contents = fs::read_to_string(file_path).expect("Maybe a the file does not exit");
-
-    // println!("With text:\n{contents}");
-
-    // let config = Config::build(&args).unwrap_or_else(|err| {
-    //     println!("❌ An error occured while processing your request: {err}");
-    //     process::exit(1);
-    // });
-
-    // run(config);
     let config = Config::build(&args).unwrap_or_else(|err| {
         println!("❌ An error occured while processing your request: {err}");
         process::exit(1);
@@ -53,12 +40,20 @@ fn main() {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let query = config.query;
     let file_path = config.file_path;
-    // println!("Searching for {query}");
-    // println!("In file {file_path}");
 
     let contents = fs::read_to_string(file_path)?;
 
-    for line in search(&query, &contents) {
+    let result = if config.ignore_case {
+        case_insensitive_search(&query, &contents)
+    } else {
+        search(&query, &contents)
+    };
+
+    if result.len() < 1 {
+        println!("\nSearch query not found!")
+    }
+
+    for line in result {
         println!("{line}")
     }
 
