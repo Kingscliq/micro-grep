@@ -28,12 +28,12 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("❌ An error occured while processing your request: {err}");
+        eprintln!("❌ An error occured while processing your request: {err}");
         process::exit(1);
     });
 
     if let Err(e) = run(config) {
-        println!("Application Error: {e}")
+        eprintln!("Application Error: {e}")
     }
 }
 
@@ -50,7 +50,7 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
     };
 
     if result.len() < 1 {
-        println!("\nSearch query not found!")
+        eprintln!("\nSearch query not found!")
     }
 
     for line in result {
